@@ -1,0 +1,146 @@
+﻿
+@{
+    ViewBag.Title = "Registered";
+    Layout = "~/Views/Shared/SimpleLayout.cshtml";
+}
+
+<style>
+    #app {
+        width: 400px;
+        height: 500px;
+        border: 1px #808080 solid;
+        margin: 0px auto;
+        padding: 25px 50px;
+        border-radius: 10px;
+    }
+    .name {
+        display: inline-block;
+    }
+    #FirstName {
+        width: 100px;
+    }
+    #LastName {
+        width: 176px;
+    }
+    .form-control {
+        margin: 10px 0px;
+    }
+</style>
+
+<form name="send" onSubmit="return checkForm();"  data-toggle="validator"> 
+    <div id="app">
+        <div class="header">
+            <h2>註冊喔</h2>
+        </div>
+
+        <input type="text" class="form-control name" id="FirstName" placeholder="姓氏">
+
+        <input type="text" class="form-control name" id="LastName" placeholder="名字">
+
+        <input type="text" class="form-control text" id="Account" placeholder="帳號-電子郵件或電話">
+
+        <input type="email" class="form-control" id="Email" placeholder="信箱">
+
+        <input type="checkbox" class="form-check-input" id="SameAccount">信箱與帳號相同
+
+        <input type="password" class="form-control" id="Password" placeholder="密碼">
+
+        <input type="password" class="form-control" id="confirmpassword" placeholder="確認密碼">
+
+        <div class="address">
+            居住地：
+            <select id="cityselect" onchange="citychange()">
+                <option value="0">請選擇</option>
+                <option v-for="item in City" :value="item.CityID">{{ item.CityName_TC }}</option>
+            </select>
+            <select id="Townselect">
+                <option value="0">請選擇</option>
+                <option v-for="item in Town" value="item.TownID">{{ item.TownName_TC }}</option>
+            </select>
+            <input type="text" class="form-control" id="Address" placeholder="地址">
+        </div>
+
+        <button type="submit" class="btn btn-primary">確定</button>
+        <button type="button" class="btn btn-warning" id="clear">清除</button>
+    </div>
+</form>
+
+<script src="https://unpkg.com/vue@2.5.13/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var data = {
+        City: [],
+        Town: []
+    }
+    
+    axios.get('https://localhost:44320//api/City').
+        then(res => {
+            data.City = res.data.Payload
+        }).catch(err => {
+            console.log(err)
+        })
+    
+    let vm = new Vue({
+        el: '#app',
+        data: data,
+    })
+
+    function citychange() {
+        let selectcity = document.querySelector('#cityselect');
+        axios.get('https://localhost:44320//api/Town/'+selectcity.value).
+        then(res => {
+            data.Town = res.data.Payload
+        }).catch(err => {
+            console.log(err)
+        })
+
+        document.getElementById("Townselect").selectedIndex ='0'
+    }
+
+    document.querySelector('#clear').addEventListener('click', function () {
+        let form = document.querySelectorAll('.form-control');
+        document.querySelector('#cityselect').selectedIndex = 0;
+        document.querySelector('#Townselect').selectedIndex = 0;
+        document.querySelector('.form-check-input').checked = false;
+        form.forEach(element => element.value = '');
+        citychange();
+    }, false);
+
+    function checkForm() {
+        let form = document.querySelectorAll('.form-control');
+        let re = true;
+        let alertstring = '';
+        let Passwordel ,confirmpasswordel;
+        
+        form.forEach(element => {
+            if (element.id === 'Password')
+                Passwordel = element;
+            if (element.id === 'confirmpassword')
+                confirmpasswordel = element;
+
+            if (element.value === '') {
+                alertstring += '必須填入'+element.placeholder+'\n';
+                re = false;
+            }   
+        })
+        if (document.querySelector('#cityselect').selectedIndex === 0) {
+            alertstring += '必須選擇縣市\n';
+            re = false;
+        }
+        if (document.querySelector('#Townselect').selectedIndex === 0){
+            alertstring += '必須選擇鄉鎮區\n';
+            re = false;
+        }
+        if (!re) {
+            alert(alertstring)
+            return re;
+        }
+
+        if (Passwordel.value !== confirmpasswordel.value) {
+            alert("密碼不一致")
+            return false;
+        }
+
+        return re
+    }
+</script>
