@@ -13,134 +13,165 @@
         padding: 25px 50px;
         border-radius: 10px;
     }
+
     .name {
         display: inline-block;
     }
+
     #FirstName {
         width: 100px;
     }
+
     #LastName {
         width: 176px;
     }
+
     .form-control {
         margin: 10px 0px;
     }
+
+    .btn {
+        width: 100px;
+        display: inline-block;
+    }
 </style>
 
-<form name="send" onSubmit="return checkForm();"  data-toggle="validator"> 
-    <div id="app">
-        <div class="header">
-            <h2>註冊喔</h2>
+<form id="register_form" role="form" data-toggle="validator">
+        <div id="app">
+            <div class="header">
+                <h2>註冊喔</h2>
+            </div>
+
+            <div class="form-group">
+                <input id="inputName" name="Name" type="text" class="form-control" placeholder="姓名" required="required">
+            </div>
+
+            
+                <input id="FirstName" type="text" class="form-control name" placeholder="姓氏" required="required">
+
+                <input id="LastName" type="text" class="form-control name"placeholder="名字" required="required">
+                <div class="help-block with-errors"></div>
+            
+                <input type="text" class="form-control text" id="Account" placeholder="帳號-電子郵件或電話">
+
+                <input type="email" class="form-control" id="Email" placeholder="信箱" data-error="郵件格式錯誤">
+
+                <input type="checkbox" class="form-check-input" id="SameAccount">信箱與帳號相同
+
+                <input type="password" class="form-control" id="inputPW" placeholder="密碼" pattern="^(?=.*\d)(?=.*[a-zA-Z]).{6,}$" data-error="請輸入含有英文字母及數字的密碼，至少六個字元。">
+
+                <input type="password" class="form-control" id="confirmpassword" placeholder="確認密碼" required="required">
+
+                <div class="address">
+                    居住地：
+                    <select id="cityselect" onchange="citychange()">
+                        <option value="0">請選擇</option>
+                        <option v-for="item in City" :value="item.CityID">{{ item.CityName_TC }}</option>
+                    </select>
+                    <select id="Townselect">
+                        <option value="0">請選擇</option>
+                        <option v-for="item in Town" value="item.TownID">{{ item.TownName_TC }}</option>
+                    </select>
+                    <input type="text" class="form-control" id="Address" placeholder="地址">
+                </div>
+
+            <button type="submit" class="btn btn-danger btn-block">確定</button>
+            <button type="button" class="btn btn-warning" id="clear">清除</button>
         </div>
+    </form>
 
-        <input type="text" class="form-control name" id="FirstName" placeholder="姓氏">
+@section scripts {
 
-        <input type="text" class="form-control name" id="LastName" placeholder="名字">
+    <script src="https://unpkg.com/vue@2.5.13/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
 
-        <input type="text" class="form-control text" id="Account" placeholder="帳號-電子郵件或電話">
+    <script>
+        $('#register_form').validator().on('submit', function (e) {
+            if (e.isDefaultPrevented()) { // 未驗證通過 則不處理
+                return;
+            } else { // 通过后，送出表单
+                alert("已送出表單");
+            }
+            e.preventDefault(); // 防止原始 form 提交表单
+        });
+    </script>
 
-        <input type="email" class="form-control" id="Email" placeholder="信箱">
+    <script>
+        var data = {
+            City: [],
+            Town: []
+        }
 
-        <input type="checkbox" class="form-check-input" id="SameAccount">信箱與帳號相同
+        axios.get('https://localhost:44320//api/City').
+            then(res => {
+                data.City = res.data.Payload
+            }).catch(err => {
+                console.log(err)
+            })
 
-        <input type="password" class="form-control" id="Password" placeholder="密碼">
+        /*let vm = new Vue({
+            el: '#app',
+            data: data,
+        })*/
 
-        <input type="password" class="form-control" id="confirmpassword" placeholder="確認密碼">
+        function citychange() {
+            let selectcity = document.querySelector('#cityselect');
+            axios.get('https://localhost:44320//api/Town/' + selectcity.value).
+                then(res => {
+                    data.Town = res.data.Payload
+                }).catch(err => {
+                    console.log(err)
+                })
 
-        <div class="address">
-            居住地：
-            <select id="cityselect" onchange="citychange()">
-                <option value="0">請選擇</option>
-                <option v-for="item in City" :value="item.CityID">{{ item.CityName_TC }}</option>
-            </select>
-            <select id="Townselect">
-                <option value="0">請選擇</option>
-                <option v-for="item in Town" value="item.TownID">{{ item.TownName_TC }}</option>
-            </select>
-            <input type="text" class="form-control" id="Address" placeholder="地址">
-        </div>
+            document.getElementById("Townselect").selectedIndex = '0'
+        }
 
-        <button type="submit" class="btn btn-primary">確定</button>
-        <button type="button" class="btn btn-warning" id="clear">清除</button>
-    </div>
-</form>
+        document.querySelector('#clear').addEventListener('click', function () {
+            let form = document.querySelectorAll('.form-control');
+            document.querySelector('#cityselect').selectedIndex = 0;
+            document.querySelector('#Townselect').selectedIndex = 0;
+            document.querySelector('.form-check-input').checked = false;
+            form.forEach(element => element.value = '');
+            citychange();
+        }, false);
 
-<script src="https://unpkg.com/vue@2.5.13/dist/vue.js"></script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script>
-    var data = {
-        City: [],
-        Town: []
-    }
-    
-    axios.get('https://localhost:44320//api/City').
-        then(res => {
-            data.City = res.data.Payload
-        }).catch(err => {
-            console.log(err)
-        })
-    
-    let vm = new Vue({
-        el: '#app',
-        data: data,
-    })
+        function CheckForm() {
+            let form = document.querySelectorAll('.form-control');
+            let re = true;
+            let alertstring = '';
+            let inputPWel, confirmpasswordel;
 
-    function citychange() {
-        let selectcity = document.querySelector('#cityselect');
-        axios.get('https://localhost:44320//api/Town/'+selectcity.value).
-        then(res => {
-            data.Town = res.data.Payload
-        }).catch(err => {
-            console.log(err)
-        })
+            form.forEach(element => {
+                if (element.id === 'inputPW')
+                    inputPWel = element;
+                if (element.id === 'confirmpassword')
+                    confirmpasswordel = element;
 
-        document.getElementById("Townselect").selectedIndex ='0'
-    }
-
-    document.querySelector('#clear').addEventListener('click', function () {
-        let form = document.querySelectorAll('.form-control');
-        document.querySelector('#cityselect').selectedIndex = 0;
-        document.querySelector('#Townselect').selectedIndex = 0;
-        document.querySelector('.form-check-input').checked = false;
-        form.forEach(element => element.value = '');
-        citychange();
-    }, false);
-
-    function checkForm() {
-        let form = document.querySelectorAll('.form-control');
-        let re = true;
-        let alertstring = '';
-        let Passwordel ,confirmpasswordel;
-        
-        form.forEach(element => {
-            if (element.id === 'Password')
-                Passwordel = element;
-            if (element.id === 'confirmpassword')
-                confirmpasswordel = element;
-
-            if (element.value === '') {
-                alertstring += '必須填入'+element.placeholder+'\n';
+                if (element.value === '') {
+                    alertstring += '必須填入' + element.placeholder + '\n';
+                    re = false;
+                }
+            })
+            if (document.querySelector('#cityselect').selectedIndex === 0) {
+                alertstring += '必須選擇縣市\n';
                 re = false;
-            }   
-        })
-        if (document.querySelector('#cityselect').selectedIndex === 0) {
-            alertstring += '必須選擇縣市\n';
-            re = false;
-        }
-        if (document.querySelector('#Townselect').selectedIndex === 0){
-            alertstring += '必須選擇鄉鎮區\n';
-            re = false;
-        }
-        if (!re) {
-            alert(alertstring)
-            return re;
-        }
+            }
+            if (document.querySelector('#Townselect').selectedIndex === 0) {
+                alertstring += '必須選擇鄉鎮區\n';
+                re = false;
+            }
+            if (!re) {
+                alert(alertstring)
+                return re;
+            }
 
-        if (Passwordel.value !== confirmpasswordel.value) {
-            alert("密碼不一致")
-            return false;
-        }
+            if (inputPWel.value !== confirmpasswordel.value) {
+                alert("密碼不一致")
+                return false;
+            }
 
-        return re
-    }
-</script>
+            return re
+        }
+    </script>
+}
